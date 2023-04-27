@@ -55,19 +55,21 @@ if (isset($_POST['submit']))
 		$input['pass'] = htmlentities($_POST['password'], ENT_QUOTES);
 
 		// create SQL query
-		$stmt = $mysqli->prepare("SELECT * FROM members WHERE username = ? AND password = ?");
+		$stmt = $mysqli->prepare("SELECT id FROM members WHERE username = ? AND password = ?");
 
 		// check if SQL query has been successful
 		if ($stmt)
 		{
 			$stmt->bind_param("ss", $input['user'], md5($input['pass'] . $config['salt']));
 			$stmt->execute();
-			$stmt->store_result();
+			$stmt->bind_result($id);
+			$stmt->fetch();
 
 			// check if there's a match
-			if ($stmt->num_rows > 0)
+			if ($id)
 			{
 				//set session variable
+				$_SESSION['id'] = $id;
 				$_SESSION['username'] = $input['user'];
 				$_SESSION['last_active'] = time();
 

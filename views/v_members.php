@@ -11,6 +11,8 @@
 			<p>
 				<a href="register.php">Register Member</a>
 				|
+				<a href="change_password.php">Change Password</a>
+				|
 				<a href="logout.php">Log Out</a>
 			</p>
 		</div>

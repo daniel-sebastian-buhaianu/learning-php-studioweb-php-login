@@ -7,7 +7,7 @@
 
 // user authentication
 $config['salt'] = 'jK7d?3';
-$config['session_timeout'] = 5; // seconds
+$config['session_timeout'] = 1 * 60; // x * 60s = x minutes
 
 // error reporting
 mysqli_report(MYSQLI_REPORT_ERROR);
