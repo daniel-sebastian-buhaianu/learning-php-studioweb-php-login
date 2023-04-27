@@ -6,12 +6,12 @@
 
 
 // database settings
-$server = 'localhost';
-$user = 'dsb99@localhost';
-$pass = 'abc123000';
-$db = 'login';
+$host_ip = "35.214.244.158";
+$username = "ubd4whpri2vfv";
+$password = "51@Fb`f[2?(#";
+$database = "dbkrrtthsgdhwc";
 
 // connect to the database
-$mysqli = new mysqli($server, $user, $pass, $db);
+$mysqli = new mysqli($host_ip, $username, $password, $database);
 
 ?>

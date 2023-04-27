@@ -17,6 +17,8 @@
 						}
 					?>
 					
+
+
 					<!-- Username Input -->
 					<label for="username">Username: *</label>
 					<input 
@@ -24,9 +26,22 @@
 						name="username"
 						value="<?php echo $input['user']; ?>" 
 					>
-					
 					<!-- Display error message (if any) -->
 					<div class="error"><?php echo $error['user']; ?></div>
+
+
+
+					<!-- Email Input -->
+					<label for="email">Email: *</label>
+					<input 
+						type="email" 
+						name="email"
+						value="<?php echo $input['email']; ?>" 
+					>
+					<!-- Display error message (if any) -->
+					<div class="error"><?php echo $error['email']; ?></div>
+
+
 
 					<!-- Password Input -->
 					<label for="password">Password: *</label>
@@ -35,9 +50,10 @@
 						name="password"
 						value="<?php echo $input['pass']; ?>" 
 					>
-					
 					<!-- Display error message (if any) -->
 					<div class="error"><?php echo $error['pass']; ?></div>
+
+
 
 					<!-- Confirm Password Input -->
 					<label for="password2">Confirm Password: *</label>
@@ -46,17 +62,21 @@
 						name="password2"
 						value="<?php echo $input['pass2']; ?>" 
 					>
-
 					<!-- Display error message (if any) -->
 					<div class="error"><?php echo $error['pass2']; ?></div>
 
+
+
 					<!-- Display required inputs -->
 					<p class="required">* required fields</p>
+
+
 
 					<!-- Submit button !-->
 					<input type="submit" name="submit" class="submit" value="Submit">
 				</div>
 			</form>
+
 
 			<!-- Navigate to other pages -->
 			<p>
