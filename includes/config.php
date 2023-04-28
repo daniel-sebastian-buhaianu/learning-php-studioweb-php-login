@@ -1,21 +1,37 @@
 <?php
 
 /*
- * CONFIG.PHP
- * Configuration Setting
+ *  CONFIG.PHP
+ *  Configuration Settings
 */
+
 
 // user authentication
 $config['salt'] = 'jK7d?3';
-$config['session_timeout'] = 1 * 60; // x * 60s = x minutes
-
+$config['session_timeout'] = 500; // seconds
 
 // domain
-$config['site_name'] = 'PHP-Login-System';
-$config['site_url'] = "https://www.dsb99.app";
-$config['site_domain'] = "dsb99.app";
+$config['site_name'] = "Your Website";
+$config['site_url'] = "http://www.yourdomain.com";
+$config['site_domain'] = "yourdomain.com";
 
 // error reporting
 mysqli_report(MYSQLI_REPORT_ERROR);
+
+/*
+	Functions
+*/
+function is_admin()
+{
+	if ($_SESSION['type'] == 'admin')
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 ?>

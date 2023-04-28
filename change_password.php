@@ -1,164 +1,135 @@
-<?php 
+<?php
 
-
-/* 
- * CHANGE_PASSWORD.PHP
- * Changes user's password
+/*
+ *  REGISTER.PHP
+ *  Register New Members
 */
 
 // start session / load configs
 session_start();
-include 'includes/config.php';
-include 'includes/db.php';
+include('includes/config.php');
+include('includes/db.php');
+
+/*
+ * This section below checking if user is logged in/checking for inactivity 
+ * may be best put in a reusable function so it is easily reused/updated
+*/
 
 // check that the user is logged in
-if (!isset($_SESSION['username'])) 
+if (!isset($_SESSION['username']))
 {
-	header("Location: login.php");
+	header("Location: login.php?unauthorized");
 }
 
 // check for inactivity
 if (time() > $_SESSION['last_active'] + $config['session_timeout'])
 {
-    // log out user
-    session_destroy();
-    header("Location: login.php?timeout");
+	// log out user
+	session_destroy();
+	header("Location: login.php?timeout");
 }
 else
 {
-    $_SESSION['last_active'] = time();
+	// update the session variable
+	$_SESSION['last_active'] = time();
 }
 
 // form defaults
 $error['alert'] = '';
-$error['current_password'] = '';
-$error['new_password'] = '';
-$error['confirm_new_password'] = '';
-$input['current_password'] = '';
-$input['new_password'] = '';
-$input['confirm_new_password'] = '';
+$error['current_pass'] = '';
+$error['pass'] = '';
+$error['pass2'] = '';
+$input['current_pass'] = '';
+$input['pass'] = '';
+$input['pass2'] = '';
 
-// check if submit btn was clicked
-if (isset($_POST['submit'])) 
+if (isset($_POST['submit']))
 {
 	// process form
-	if ($_POST['current_password'] == '' || $_POST['new_password'] == '' || $_POST['confirm_new_password'] == '') 
+	if ($_POST['current_pass'] == '' || $_POST['password'] == '' || $_POST['password2'] == '')
 	{
-		// all fields need to be filled in
-		if ($_POST['current_password'] == '') 
-		{
-			$error['current_password'] = 'required!';
-		}
-
-		if ($_POST['new_password'] == '') 
-		{
-			$error['new_password'] = 'required!';
-		}
-
-		if ($_POST['confirm_new_password'] == '') 
-		{
-			$error['confirm_new_password'] = 'required!';
-		}
-
-		// set error message
-		$error['alert'] = 'Please fill in the required fields!';
-
-		// store user's input (make sure it's clean by using htmlentities)
-		// -> prevent SQL injection / malicious code
-		$input['current_password'] = htmlentities($_POST['current_password'], ENT_QUOTES);
-		$input['new_password'] = htmlentities($_POST['new_password'], ENT_QUOTES);
-		$input['confirm_new_password'] = htmlentities($_POST['confirm_new_password'], ENT_QUOTES);
-
-		// show change password page
-		include 'views/v_change_password.php';
-
+		// both fields need to be filled in
+		if ($_POST['current_pass'] == '') { $error['current_pass'] = 'required!'; }
+		if ($_POST['password'] == '') { $error['pass'] = 'required!'; }
+		if ($_POST['password2'] == '') { $error['pass2'] = 'required!'; }
+		$error['alert'] = 'Please fill in required fields!';
+		
+		// get data from form
+		$input['current_pass'] = htmlentities($_POST['current_pass'], ENT_QUOTES);
+		$input['pass'] = htmlentities($_POST['password'], ENT_QUOTES);
+		$input['pass2'] = htmlentities($_POST['password2'], ENT_QUOTES);
+		
+		// show form
+		include('views/v_password.php');
 	}
-	else if ($_POST['new_password'] != $_POST['confirm_new_password'])
-	{ 	
-		// both password fields must match
-		$error['alert'] = "New Password must match Confirm New Password";
-
-		// store user's input (make sure it's clean by using htmlentities)
-		// -> prevent SQL injection / malicious code
-		$input['current_password'] = htmlentities($_POST['current_password'], ENT_QUOTES);
-		$input['new_password'] = htmlentities($_POST['new_password'], ENT_QUOTES);
-		$input['confirm_new_password'] = htmlentities($_POST['confirm_new_password'], ENT_QUOTES);
-
-		// show change password page
-		include 'views/v_change_password.php';
-	} 
-	else 
+	else if ($_POST['password'] != $_POST['password2'])
 	{
-		// store user's input (make sure it's clean by using htmlentities)
-		// -> prevent SQL injection / malicious code
-		$input['current_password'] = htmlentities($_POST['current_password'], ENT_QUOTES);
-		$input['new_password'] = htmlentities($_POST['new_password'], ENT_QUOTES);
-		$input['confirm_new_password'] = htmlentities($_POST['confirm_new_password'], ENT_QUOTES);
-
-
-		// query database
-		$check = $mysqli->prepare("SELECT password FROM members WHERE id = ?");
-
-		// check if SQL query valid and get password hash from db
-		if ($check)
+		// both password fields need to match
+		$error['alert'] = 'Password fields must match!';
+		
+		// get data from form
+		$input['current_pass'] = htmlentities($_POST['current_pass'], ENT_QUOTES);
+		$input['pass'] = htmlentities($_POST['password'], ENT_QUOTES);
+		$input['pass2'] = htmlentities($_POST['password2'], ENT_QUOTES);
+		
+		// show form
+		include('views/v_password.php'); 
+	}
+	else
+	{
+		// get and clean data from form
+		$input['current_pass'] = $_POST['current_pass'];
+		$input['pass'] = $_POST['password'];
+		$input['pass2'] = $_POST['password2'];
+		
+		if ($check = $mysqli->prepare("SELECT password FROM members WHERE id = ?"))
 		{
-			// Execute SQL command
 			$check->bind_param("s", $_SESSION['id']);
 			$check->execute();
-			$check->bind_result($current_password);
+			$check->bind_result($current_pass);
 			$check->fetch();
 			$check->close();
 		}
-		else
+		
+		if (md5($input['current_pass'] . $config['salt']) != $current_pass)
 		{
-			echo "ERROR: Could not prepare MySQLi statement.";
-		}
-
-		if (md5($input['current_password'] . $config['salt']) != $current_password)
-		{
-			// current_password input must match user's password 
-			$error['alert'] = 'Current Password is incorrect.';
-			$error['current_password'] = 'incorrect';
-
-			// show change password page
-			include 'views/v_change_password.php';
+			// error
+			$error['alert'] = "Your current password is incorrect!";
+			$error['current_pass'] = "incorrect";
+			include('views/v_password.php'); 
 		}
 		else
 		{
-			// query db
-			$stmt = $mysqli->prepare("UPDATE members SET password = ? WHERE id = ?");
-
-			// if query is successful
-			if ($stmt)
+			// insert into database
+			if ($stmt = $mysqli->prepare("UPDATE members SET password = ? WHERE id = ?"))
 			{
-				// Execute SQL command
-				$stmt->bind_param("si", md5($input['new_password'] . $config['salt']), $_SESSION['id']);
+				$stmt->bind_param("ss", md5($input['pass'] . $config['salt']), $_SESSION['id']);
 				$stmt->execute();
 				$stmt->close();
+				
+				// add alert and clear form values
+				$error['alert'] = 'Password updated successfully!';
+				$input['current_pass'] = '';
+				$input['pass'] = '';
+				$input['pass2'] = '';
+				
+				// show form
+				include('views/v_password.php');
 			}
 			else
 			{
 				echo "ERROR: Could not prepare MySQLi statement.";
 			}
 		}
-
-			// Store feedback and reset form input fields
-			$error['alert'] = 'Password has been changed successfully!';
-			$input['current_password'] = '';
-			$input['new_password'] = '';
-			$input['confirm_new_password'] = '';
-
-			// Show change password page
-			include 'views/v_change_password.php';
 	}
-} 
-else 
+}
+else
 {
-	// Show change password page
-	include 'views/v_change_password.php';	
+	// show form
+	include('views/v_password.php');
 }
 
-// close database connection
+// close db connection
 $mysqli->close();
 
 ?>

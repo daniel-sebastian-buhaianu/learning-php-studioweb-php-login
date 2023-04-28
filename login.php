@@ -1,15 +1,14 @@
-<?php 
+<?php
 
-
-/* 
- * LOGIN.PHP
- * Log in members
+/*
+ *  LOGIN.PHP
+ *  Log in members
 */
 
 // start session / load configs
 session_start();
-include 'includes/config.php';
-include 'includes/db.php';
+include('includes/config.php');
+include('includes/db.php');
 
 // form defaults
 $error['alert'] = '';
@@ -18,101 +17,87 @@ $error['pass'] = '';
 $input['user'] = '';
 $input['pass'] = '';
 
-// check if submit btn was clicked
-if (isset($_POST['submit'])) 
+if (isset($_POST['submit']))
 {
-	// process form
-	if ($_POST['username'] == '' || $_POST['password'] == '') 
+	// if form has been submitted, process form
+	if ($_POST['username'] == '' || $_POST['password'] == '')
 	{
 		// both fields need to be filled in
-		if ($_POST['username'] == '') 
-		{
-			$error['user'] = 'required!';
-		}
-
-		if ($_POST['password'] == '') 
-		{
-			$error['pass'] = 'required!';
-		}
-
-		// set error message
-		$error['alert'] = 'Please fill in the required fields!';
-
-		// store user's input (make sure it's clean by using htmlentities)
-		// -> prevent SQL injection / malicious code
+		if ($_POST['username'] == '') { $error['user'] = 'required!'; }
+		if ($_POST['password'] == '') { $error['pass'] = 'required!'; }
+		$error['alert'] = 'Please fill in required fields!';
+		
+		// get data from form
 		$input['user'] = htmlentities($_POST['username'], ENT_QUOTES);
 		$input['pass'] = htmlentities($_POST['password'], ENT_QUOTES);
-
-		// show login page
-		include 'views/v_login.php';
-
-	} 
-	else 
+		
+		// show form
+		include('views/v_login.php');
+	}
+	else
 	{
-		// store user's input (make sure it's clean by using htmlentities)
-		// -> prevent SQL injection / malicious code
+		// get and clean data from form
 		$input['user'] = htmlentities($_POST['username'], ENT_QUOTES);
 		$input['pass'] = htmlentities($_POST['password'], ENT_QUOTES);
-
-		// create SQL query
-		$stmt = $mysqli->prepare("SELECT id FROM members WHERE username = ? AND password = ?");
-
-		// check if SQL query has been successful
-		if ($stmt)
+		
+		// create query
+		if ($stmt = $mysqli->prepare("SELECT members.id, permissions.name FROM members, permissions WHERE username=? AND password = ? AND members.type = permissions.id"))
 		{
 			$stmt->bind_param("ss", $input['user'], md5($input['pass'] . $config['salt']));
 			$stmt->execute();
-			$stmt->bind_result($id);
+			$stmt->bind_result($id, $type);
 			$stmt->fetch();
-
-			// check if there's a match
+			
+			// check if there is a match in the database for the user/password combination
 			if ($id)
 			{
-				//set session variable
+				// close statement
+				$stmt->close();
+				
+				// set session variable
 				$_SESSION['id'] = $id;
+				$_SESSION['type'] = $type;
 				$_SESSION['username'] = $input['user'];
 				$_SESSION['last_active'] = time();
-
-				// redirect to members.php
+				
+				// redirect to member's page
 				header("Location: members.php");
-			} 
-			else 
+			}
+			else
 			{
-				// username/password is incorrect
-				$error['alert'] = "Username or password is incorrect";
-
-				// show login page
-				include 'views/v_login.php';
+				// close statement
+				$stmt->close();
+				
+				// username/password incorrect
+				$error['alert'] = "Username or password incorrect!";
+				
+				// show form
+				include('views/v_login.php');
 			}
 		}
 		else
 		{
-			// print error if SQL query failed
 			echo "ERROR: Could not prepare MySQLi statement.";
 		}
 	}
-} 
-else 
+}
+else
 {
-	// Check if user tried to access members only area
-	if (isset($_GET['unauthorized'])) 
+	// check for any variables within the URL
+	if (isset($_GET['unauthorized']))
 	{
-		// Provide feedback to user
-		$error['alert'] = 'Please login to view that page';
+		$error['alert'] = 'Please login to view that page!';
 	}
-
-	// Check if session has timed out
 	if (isset($_GET['timeout']))
 	{
-		// Provide feedback to user
 		$error['alert'] = 'Your session has expired. Please log in again.';
 	}
 
-	// show login page
-	include 'views/v_login.php';	
+	// if the form hasn't been submitted, show form
+	include('views/v_login.php');
 }
 
-// close database connection
+// close db connection
 $mysqli->close();
-	
+
 ?>
